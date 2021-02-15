@@ -24,11 +24,11 @@ compatibleSystem = virtual_memory()
 if (compatibleSystem.total < 8589934592):
     raise Exception ("Cannot start - not enough RAM")
 else:
-    continueConfirm = input("This script REQUIRES at least 8GB of RAM to run and suggests at least 16GB of RAM. Failure to check system compatiblity may result in data loss! To continue, press 1 and Enter, otherwise, press 0 and Enter.")
-    if (continueConfirm == '1'):
+    continueConfirm = input("This script REQUIRES at least 8GB of RAM to run and suggests at least 16GB of RAM. Failure to check system compatiblity may result in data loss! Do you want to continue? (y/N)")
+    if (continueConfirm == 'y' or continueConfirm == 'Y'):
         # read the old CSV into oldDf
         print('Reading data in')
-        oldDf = pd.read_csv("./testdata.csv")
+        oldDf = pd.read_csv("./nflfastRall.csv")
         
         print('Make editable version of data')
         # make an internally editable version of the dataframe
@@ -45,6 +45,7 @@ else:
         away_team_list = []
         run_tally_list = []
         result_list = []
+        print('Sorting data by game - this might take some time')
         # Fill all of the unique games into the newDf dataframe
         for index, row in tqdm(editDf.iterrows(), desc='Progress', total=(editDf.shape[0] + 1), ascii = True):
             new_game_id = editDf.game_id.iloc[index]
@@ -52,26 +53,19 @@ else:
             new_away_team = editDf.away_team.iloc[index]
             result_int = editDf.result.iloc[index]
             list_iterator = 0
-            print('Reset temporary run play tally')
             
             
             # Test whether new game ID is the same as the old game ID, if so then the game is the same
             if new_game_id != editDf.game_id.iloc[index - 1]:
                 
-                print('New game: ', new_game_id)
-                print('Adding to dataframe')
                 game_id_list.append(new_game_id)
                 home_team_list.append(new_home_team)
                 away_team_list.append(new_away_team)
-                
                 if (result_int == 0):
-                    print('Game was TIE')
                     result_list.append(2)
                 elif (result_int > 0):
-                    print('Game was LOSS')
                     result_list.append(1)
                 elif (result_int < 0):
-                    print('Game was WIN')
                     result_list.append(0)
                 else:
                     issue = 'Undefined game outcome: ' + result_int
@@ -79,9 +73,7 @@ else:
                     result_list.append(-1)
                 list_iterator += 1
             else:
-                print('Same game: ', new_game_id)
-                print('Skipping add new entry to dataframe') 
-            
+                pass
         
         print('Adding game_id to output dataframe')
         # Add the computed lists to the dataframe 
@@ -93,6 +85,7 @@ else:
         print('Adding result_list to output dataframe')
         newDf['simple_result'] = result_list
         
+        print('Sorting play type data - this might take some time')
         for index, row in tqdm(newDf.iterrows(), desc='Progress', total=(newDf.shape[0] + 1), ascii = True):
             current_game_id = newDf.game_id.iloc[index]
             tempDf = (editDf.game_id == current_game_id) & (editDf.play_type == 'run')
@@ -119,4 +112,3 @@ else:
               )
     else:
         raise Exception ("User terminated - not enough RAM")
-
