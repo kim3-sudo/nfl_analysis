@@ -24,7 +24,7 @@ compatibleSystem = virtual_memory()
 if (compatibleSystem.total < 8589934592):
     raise Exception ("Cannot start - not enough RAM")
 else:
-    continueConfirm = input("This script REQUIRES at least 8GB of RAM to run and suggests at least 16GB of RAM. Failure to check system compatiblity may result in data loss! Do you want to continue? (y/N)")
+    continueConfirm = input("This script REQUIRES at least 8GB of RAM to run and suggests at least 16GB of RAM. Failure to check system compatiblity may result in data loss! Do you want to continue? (y/N): ")
     if (continueConfirm == 'y' or continueConfirm == 'Y'):
         # read the old CSV into oldDf
         print('Reading data in')
@@ -36,14 +36,17 @@ else:
         
         print('Making output dataframe')
         # create new columns and fit them into a new dataframe
-        newColumns = ["game_id", "home_team", "away_team", "run_plays", "simple_result"]
+        newColumns = ["game_id", "home_team", "away_team", "pos_team", "run_play_home", "run_play_away", "run_play_none", "simple_result"]
         newDf = pd.DataFrame(columns = newColumns)
         
         # Initialize empty game ID list
         game_id_list = []
         home_team_list = []
         away_team_list = []
-        run_tally_list = []
+        run_tally_list_home = []
+        run_tally_list_away = []
+        run_tally_list_none = []
+        pos_team_list = []
         result_list = []
         print('Sorting data by game - this might take some time')
         # Fill all of the unique games into the newDf dataframe
@@ -51,6 +54,7 @@ else:
             new_game_id = editDf.game_id.iloc[index]
             new_home_team = editDf.home_team.iloc[index]
             new_away_team = editDf.away_team.iloc[index]
+            pos_team = editDf.posteam.iloc[index]
             result_int = editDf.result.iloc[index]
             list_iterator = 0
             
@@ -61,6 +65,10 @@ else:
                 game_id_list.append(new_game_id)
                 home_team_list.append(new_home_team)
                 away_team_list.append(new_away_team)
+                if (pos_team == True):
+                    pos_team_list.append(pos_team)
+                else:
+                    pos_team_list.append("NOPOS")
                 if (result_int == 0):
                     result_list.append(2)
                 elif (result_int > 0):
@@ -82,18 +90,33 @@ else:
         newDf['home_team'] = home_team_list
         print('Adding away_team to output dataframe')
         newDf['away_team'] = away_team_list
+        print('Adding posessing team to output dataframe')
+        newDf['pos_team'] = pos_team_list
         print('Adding result_list to output dataframe')
         newDf['simple_result'] = result_list
         
         print('Sorting play type data - this might take some time')
         for index, row in tqdm(newDf.iterrows(), desc='Progress', total=(newDf.shape[0] + 1), ascii = True):
             current_game_id = newDf.game_id.iloc[index]
-            tempDf = (editDf.game_id == current_game_id) & (editDf.play_type == 'run')
-            run_tally_list.append(tempDf.sum())
+            current_home_team = newDf.home_team.iloc[index]
+            current_away_team = newDf.away_team.iloc[index]
+            current_pos_team = newDf.pos_team.iloc[index]
+            tempHomeDf = (editDf.game_id == current_game_id) & (editDf.play_type == 'run') & (editDf.home_team == current_pos_team)
+            run_tally_list_home.append(tempHomeDf.sum())
+            tempAwayDf = (editDf.game_id == current_game_id) & (editDf.play_type == 'run') & (editDf.away_team == current_pos_team)
+            run_tally_list_away.append(tempAwayDf.sum())
+            tempNoneDf = (editDf.game_id == current_game_id) & (editDf.play_type == 'run') & (editDf.home_team != current_pos_team) & (editDf.away_team != current_pos_team) 
+            run_tally_list_none.append(tempNoneDf.sum())
             
-        print('Adding run tally to output dataframe')
-        newDf['run_plays'] = run_tally_list
-
+        print('Adding home run tally to output dataframe')
+        newDf['run_play_home'] = run_tally_list_home
+        
+        print('Adding away run tally to output dataframe')
+        newDf['run_play_away'] = run_tally_list_away
+        
+        print('Adding away run tally to output dataframe')
+        newDf['run_play_none'] = run_tally_list_none
+        
         print('Generating output file')
         now = datetime.now()
         datetime_string = now.strftime("%Y%m%d_%H%M%S")
@@ -112,3 +135,4 @@ else:
               )
     else:
         raise Exception ("User terminated - not enough RAM")
+
