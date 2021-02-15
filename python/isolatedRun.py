@@ -17,17 +17,18 @@ import pandas as pd
 import warnings
 from psutil import virtual_memory
 from datetime import datetime
+from tqdm import tqdm
 
 print("Checking system compatibility")
 compatibleSystem = virtual_memory()
-if (compatibleSystem.total < 17179860388):
+if (compatibleSystem.total < 8589934592):
     raise Exception ("Cannot start - not enough RAM")
 else:
-    continueConfirm = int(input("This script REQUIRES at least 18GB of RAM to run and suggests at least 24GB of RAM. Failure to check system compatiblity may result in data loss! To continue, press 1 and Enter, otherwise, press 0 and Enter."))
-    if (continueConfirm == 1):
+    continueConfirm = input("This script REQUIRES at least 8GB of RAM to run and suggests at least 16GB of RAM. Failure to check system compatiblity may result in data loss! To continue, press 1 and Enter, otherwise, press 0 and Enter.")
+    if (continueConfirm == '1'):
         # read the old CSV into oldDf
         print('Reading data in')
-        oldDf = pd.read_csv("./nflfastRall.csv")
+        oldDf = pd.read_csv("./testdata.csv")
         
         print('Make editable version of data')
         # make an internally editable version of the dataframe
@@ -45,19 +46,18 @@ else:
         run_tally_list = []
         result_list = []
         # Fill all of the unique games into the newDf dataframe
-        for index, row in editDf.iterrows():
+        for index, row in tqdm(editDf.iterrows(), desc='Progress', total=(editDf.shape[0] + 1), ascii = True):
             new_game_id = editDf.game_id.iloc[index]
             new_home_team = editDf.home_team.iloc[index]
             new_away_team = editDf.away_team.iloc[index]
-            play_type = editDf.play_type.iloc[index]
             result_int = editDf.result.iloc[index]
             list_iterator = 0
-            run_tally = 0
+            print('Reset temporary run play tally')
+            
             
             # Test whether new game ID is the same as the old game ID, if so then the game is the same
             if new_game_id != editDf.game_id.iloc[index - 1]:
-                run_tally_list.append(run_tally)
-                run_tally = 0
+                
                 print('New game: ', new_game_id)
                 print('Adding to dataframe')
                 game_id_list.append(new_game_id)
@@ -74,20 +74,14 @@ else:
                     print('Game was WIN')
                     result_list.append(0)
                 else:
-                    Warning('Undefined game outcome: ', result_int)
+                    issue = 'Undefined game outcome: ' + result_int
+                    warnings.warn(issue)
                     result_list.append(-1)
-                if (play_type == 'run'):
-                    run_tally += 1
-                else:
-                    run_tally += 0
                 list_iterator += 1
             else:
                 print('Same game: ', new_game_id)
-                print('Skipping add new entry to dataframe')
-                if (play_type == 'run'):
-                    run_tally += 1
-                else:
-                    run_tally += 0
+                print('Skipping add new entry to dataframe') 
+            
         
         print('Adding game_id to output dataframe')
         # Add the computed lists to the dataframe 
@@ -96,28 +90,17 @@ else:
         newDf['home_team'] = home_team_list
         print('Adding away_team to output dataframe')
         newDf['away_team'] = away_team_list
-        print('Adding run tally to output dataframe')
-        newDf['run_plays'] = run_tally_list
         print('Adding result_list to output dataframe')
         newDf['simple_result'] = result_list
         
-        """
-        for index0, row0 in newDf.iterrows():
-            print('Output iteration:', newDf.game_id.iloc[index0])
-            for index1, row1 in editDf.iterrows():
-                print('Input iteration:', editDf.game_id.iloc[index1])
-                temp_tally = 0
-                if (editDf.game_id.iloc[index1] == newDf.game_id.iloc[index0] and editDf.play_type_nfl.iloc[index1] == 'RUN'): 
-                    print('Play is RUN')
-                    print('Incr. tally temp by 1')
-                    temp_tally += 1
-                else:
-                    print('Play is not RUN')
-                    temp_tally += 0
-                run_tally_list.append(temp_tally)
-        
+        for index, row in tqdm(newDf.iterrows(), desc='Progress', total=(newDf.shape[0] + 1), ascii = True):
+            current_game_id = newDf.game_id.iloc[index]
+            tempDf = (editDf.game_id == current_game_id) & (editDf.play_type == 'run')
+            run_tally_list.append(tempDf.sum())
+            
+        print('Adding run tally to output dataframe')
         newDf['run_plays'] = run_tally_list
-        """
+
         print('Generating output file')
         now = datetime.now()
         datetime_string = now.strftime("%Y%m%d_%H%M%S")
