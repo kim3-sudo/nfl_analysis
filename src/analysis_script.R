@@ -3,9 +3,6 @@
 ### STAT 306 S21 @ Kenyon College
 
 # Declare global variables for datasets
-nfldata2018 = null
-nfldata2019 = null
-nfldata2020 = null
 
 # Load libraries
 message("####################################################################")
@@ -43,5 +40,6 @@ ggplot2Result = tryCatch({
 })
 
 # Load in nflfastR
+data <- readRDS(url('https://github.com/'))
 
 # Data analysis

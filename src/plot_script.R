@@ -4,6 +4,5 @@
 
 library(mosaic)
 library(ggplot2)
-library(nflfastR)
 
 data <- readRDS(url('https://raw.githubusercontent.com/guga31bb/nflfastR-data/master/data/play_by_play_2019.rds'))
