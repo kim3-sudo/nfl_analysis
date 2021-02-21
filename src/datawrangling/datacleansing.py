@@ -10,7 +10,7 @@
 # Import libraries
 import pandas as pd
 import numpy as np
-import constant
+from constant import *
 import re
 from tqdm import tqdm
 
@@ -45,9 +45,12 @@ def getTemperature(weather):
     except:
       return ''
 
+print("Importing CSV data")
+
 ### Choose the location of your dataset here - use a full (not relative) filepath for best results:
 csvdata = "/home/kim3/nfl_analysis_data/nflfastr_pbp_2010_to_2020.csv"
 
+print("Reading CSV data")
 data = pd.read_csv(csvdata)
 
 # Prepare to clean all but needed columns
@@ -62,9 +65,33 @@ dataColumnsToDrop.remove('cp')
 dataColumnsToDrop.remove('cpoe')
 
 # Drop all other columns
+print("Removing unneeded columns")
 data.drop(dataColumnsToDrop, axis = 1)
 
+# Drop irrelevant rows
+removalList = []
+originalLen = data.shape[0]
+for index,rows in tqdm(data.iterrows(), desc='Row Processing', total = data.shape[0], ascii = True):
+  play_type = data.play_type.iloc[index]
+  if (play_type == 'pass'):
+    continue
+  elif (play_type == 'field_goal'):
+    continue
+  elif (play_type == 'punt'):
+    continue
+  elif (play_type == 'kickoff'):
+    continue
+  elif (play_type == 'extra_point'):
+    continue
+  else:
+    removalList.append(index)
+print('Removing', len(removalList), 'out of', originalLen,'rows')
+data.drop(data.index[removalList], axis = 0, inplace = True)
+print('Done.')
+
+newData = data
 # Create lists that will hold new data
+print("Creating lists for new data")
 kick_accuracy = []
 pass_accuracy = []
 altitude = []
@@ -74,132 +101,146 @@ temperature = []
 # Process the altitude
 # To get altitudes, see the stadium reference document
 print("Processing altitude data")
-for index,rows in tqdm(data.iterrows(), desc='Altitude Progress', total=(data.shape[0], ascii = True)):
-  if (data.game_stadium.iloc[index] == 'Edward Jones Dome'):
+for index,rows in tqdm(newData.iterrows(), desc='Altitude Progress', total=(newData.shape[0]), ascii = True):
+  game_stadium = newData.game_stadium.iloc[index]
+  if (game_stadium == 'Edward Jones Dome'):
     altitude.append(EDWARDJAMESDOME)
-  elif (data.game_stadium.iloc[index] == 'Heinz Field'):
+  elif (game_stadium == 'Heinz Field'):
     altitude.append(HEINZFIELD)
-  elif (data.game_stadium.iloc[index] == 'New Meadowlands Stadium'):
+  elif (game_stadium == 'New Meadowlands Stadium'):
     altitude.append(METLIFESTADIUM)
-  elif (data.game_stadium.iloc[index] == 'Gillette Stadium'):
+  elif (game_stadium == 'Gillette Stadium'):
     altitude.append(GILLETTESTADIUM)
-  elif (data.game_stadium.iloc[index] == 'Raymond James Stadium'):
+  elif (game_stadium == 'Raymond James Stadium'):
     altitude.append(RAYMONDJAMESSTADIUM)
-  elif (data.game_stadium.iloc[index] == 'FedExField'):
+  elif (game_stadium == 'FedExField'):
     altitude.append(FEDEXFIELD)
-  elif (data.game_stadium.iloc[index] == 'EverBank Field'):
+  elif (game_stadium == 'EverBank Field'):
     altitude.append(TIAABANKFIELD)
-  elif (data.game_stadium.iloc[index] == 'Soldier Field'):
+  elif (game_stadium == 'Soldier Field'):
     altitude.append(SOLDIERFIELD)
-  elif (data.game_stadium.iloc[index] == 'Lincoln Financial Field'):
+  elif (game_stadium == 'Lincoln Financial Field'):
     altitude.append(LINCOLNFINANCIALFIELD)
-  elif (data.game_stadium.iloc[index] == 'Reliant Stadium'):
+  elif (game_stadium == 'Reliant Stadium'):
     altitude.append(NRGSTADIUM)
-  elif (data.game_stadium.iloc[index] == 'Ralph Wilson Stadium'):
+  elif (game_stadium == 'Ralph Wilson Stadium'):
     altitude.append(BILLSSTADIUM)
-  elif (data.game_stadium.iloc[index] == 'Louisiana Superdome'):
+  elif (game_stadium == 'Louisiana Superdome'):
     altitude.append(MERCEDESBENZSUPERDOME)
-  elif (data.game_stadium.iloc[index] == 'LP Field'):
+  elif (game_stadium == 'LP Field'):
     altitude.append(NISSANSTADIUM)
-  elif (data.game_stadium.iloc[index] == 'Arrowhead Stadium'):
+  elif (game_stadium == 'Arrowhead Stadium'):
     altitude.append(ARROWHEADSTADIUM)
-  elif (data.game_stadium.iloc[index] == 'Qwest Field'):
+  elif (game_stadium == 'Qwest Field'):
     altitude.append(LUMENFIELD)
-  elif (data.game_stadium.iloc[index] == 'Georgia Dome'):
+  elif (game_stadium == 'Georgia Dome'):
     altitude.append(MERCEDESBENZSTADIUM)
-  elif (data.game_stadium.iloc[index] == 'Paul Brown Stadium'):
+  elif (game_stadium == 'Paul Brown Stadium'):
     altitude.append(PAULBROWNSTADIUM)
-  elif (data.game_stadium.iloc[index] == 'Lambeau Field'):
+  elif (game_stadium == 'Lambeau Field'):
     altitude.append(LAMBEAUFIELD)
-  elif (data.game_stadium.iloc[index] == 'Cowboys Stadium'):
+  elif (game_stadium == 'Cowboys Stadium'):
     altitude.append(ATTSTADIUM)
-  elif (data.game_stadium.iloc[index] == 'Qualcomm Stadium'):
+  elif (game_stadium == 'Qualcomm Stadium'):
     altitude.append(SDCCUSTADIUM)
-  elif (data.game_stadium.iloc[index] == 'Cleveland Browns Stadium'):
+  elif (game_stadium == 'Cleveland Browns Stadium'):
     altitude.append(FIRSTENERGYSTADIUM)
-  elif (data.game_stadium.iloc[index] == 'Mall of America Field'):
+  elif (game_stadium == 'Mall of America Field'):
     altitude.append(MALLOFAMERICAFIELD)
-  elif (data.game_stadium.iloc[index] == 'Lucas Oil Stadium'):
+  elif (game_stadium == 'Lucas Oil Stadium'):
     altitude.append(LUCASOILSTADIUM)
-  elif (data.game_stadium.iloc[index] == 'Ford Field'):
+  elif (game_stadium == 'Ford Field'):
     altitude.append(FORDFIELD)
-  elif (data.game_stadium.iloc[index] == 'Invesco Field at Mile High'):
+  elif (game_stadium == 'Invesco Field at Mile High'):
     altitude.append(EMPOWERFIELD)
-  elif (data.game_stadium.iloc[index] == 'Oakland-Alameda County Coliseum'):
+  elif (game_stadium == 'Oakland-Alameda County Coliseum'):
     altitude.append(RINGCENTRALCOLISEUM)
-  elif (data.game_stadium.iloc[index] == 'Bank of America Stadium'):
+  elif (game_stadium == 'Bank of America Stadium'):
     altitude.append(BANKOFAMERICASTADIUM)
-  elif (data.game_stadium.iloc[index] == 'M&T Bank Stadium'):
+  elif (game_stadium == 'M&T Bank Stadium'):
     altitude.append(MTBANKSTADIUM)
-  elif (data.game_stadium.iloc[index] == 'Sun Life Stadium'):
+  elif (game_stadium == 'Sun Life Stadium'):
     altitude.append(HARDROCKSTADIUM)
-  elif (data.game_stadium.iloc[index] == 'University of Phoenix Stadium'):
+  elif (game_stadium == 'University of Phoenix Stadium'):
     altitude.append(STATEFARMSTADIUM)
-  elif (data.game_stadium.iloc[index] == 'Wembley Stadium'):
+  elif (game_stadium == 'Wembley Stadium'):
     altitude.append(WEMBLEYSTADIUM)
-  elif (data.game_stadium.iloc[index] == 'Rogers Centre'):
+  elif (game_stadium == 'Rogers Centre'):
     altitude.append(ROGERSCENTRE)
-  elif (data.game_stadium.iloc[index] == 'TCF Bank Stadium'):
+  elif (game_stadium == 'TCF Bank Stadium'):
     altitude.append(TCFBANKSTADIUM)
-  elif (data.game_stadium.iloc[index] == 'MetLife Stadium'):
+  elif (game_stadium == 'MetLife Stadium'):
     altitude.append(METLIFESTADIUM)
-  elif (data.game_stadium.iloc[index] == 'Sports Authority Field at Mile High'):
+  elif (game_stadium == 'Sports Authority Field at Mile High'):
     altitude.append(EMPOWERFIELD)
-  elif (data.game_stadium.iloc[index] == 'Mercedes-Benz Superdome'):
+  elif (game_stadium == 'Mercedes-Benz Superdome'):
     altitude.append(MERCEDESBENZSUPERDOME)
-  elif (data.game_stadium.iloc[index] == 'CenturyLink Field'):
+  elif (game_stadium == 'CenturyLink Field'):
     altitude.append(LUMENFIELD)
-  elif (data.game_stadium.iloc[index] == 'O.co Coliseum'):
+  elif (game_stadium == 'O.co Coliseum'):
     altitude.append(RINGCENTRALCOLISEUM)
-  elif (data.game_stadium.iloc[index] == 'FirstEnergy Stadium'):
+  elif (game_stadium == 'FirstEnergy Stadium'):
     altitude.append(FIRSTENERGYSTADIUM)
-  elif (data.game_stadium.iloc[index] == 'AT&T Stadium'):
+  elif (game_stadium == 'AT&T Stadium'):
     altitude.append(ATTSTADIUM)
-  elif (data.game_stadium.iloc[index] == 'NRG Stadium'):
+  elif (game_stadium == 'NRG Stadium'):
     altitude.append(NRGSTADIUM)
-  elif (data.game_stadium.iloc[index] == 'Levi\'s Stadium'):
+  elif (game_stadium == 'Levi\'s Stadium'):
     altitude.append(LEVISSTADIUM)
-  elif (data.game_stadium.iloc[index] == 'Nissan Stadium'):
+  elif (game_stadium == 'Nissan Stadium'):
     altitude.append(NISSANSTADIUM)
-  elif (data.game_stadium.iloc[index] == 'U.S. Bank Stadium'):
+  elif (game_stadium == 'U.S. Bank Stadium'):
     altitude.append(USBANKSTADIUM)
-  elif (data.game_stadium.iloc[index] == 'New Era Field'):
+  elif (game_stadium == 'New Era Field'):
     altitude.append(BILLSSTADIUM)
-  elif (data.game_stadium.iloc[index] == 'Los Angeles Memorial Coliseum'):
+  elif (game_stadium == 'Los Angeles Memorial Coliseum'):
     altitude.append(LAMEMORIALCOLISEUM)
-  elif (data.game_stadium.iloc[index] == 'Hard Rock Stadium'):
+  elif (game_stadium == 'Hard Rock Stadium'):
     altitude.append(HARDROCKSTADIUM)
-  elif (data.game_stadium.iloc[index] == 'Twickenham Stadium'):
+  elif (game_stadium == 'Twickenham Stadium'):
     altitude.append(TWICKENHAMSTADIUM)
-  elif (data.game_stadium.iloc[index] == 'Azteca Stadium'):
+  elif (game_stadium == 'Azteca Stadium'):
     altitude.append(AZTECASTADIUM)
-  elif (data.game_stadium.iloc[index] == 'Mercedes-Benz Stadium'):
+  elif (game_stadium == 'Mercedes-Benz Stadium'):
     altitude.append(MERCEDESBENZSTADIUM)
-  elif (data.game_stadium.iloc[index] == 'StubHub Center'):
+  elif (game_stadium == 'StubHub Center'):
     altitude.append(DIGNITYHEALTHSPORTSPARK)
-  elif (data.game_stadium.iloc[index] == 'State Farm Stadium'):
+  elif (game_stadium == 'State Farm Stadium'):
     altitude.append(STATEFARMSTADIUM)
-  elif (data.game_stadium.iloc[index] == 'TIAA Bank Stadium'):
-    altitude.append(TIAABANKSTADIUM)
-  elif (data.game_stadium.iloc[index] == 'Ring Central Coliseum'):
+  elif (game_stadium == 'TIAA Bank Stadium'):
+    altitude.append(TIAABANKFIELD)
+  elif (game_stadium == 'Ring Central Coliseum'):
     altitude.append(RINGCENTRALCOLISEUM)
-  elif (data.game_stadium.iloc[index] == 'Empower Field at Mile High'):
+  elif (game_stadium == 'Empower Field at Mile High'):
     altitude.append(EMPOWERFIELD)
-  elif (data.game_stadium.iloc[index] == 'Tottenham Stadium'):
+  elif (game_stadium == 'Tottenham Stadium'):
     altitude.append(TOTTENHAMSTADIUM)
-  elif (data.game_stadium.iloc[index] == 'SoFi Stadium'):
+  elif (game_stadium == 'SoFi Stadium'):
     altitude.append(SOFISTADIUM)
-  elif (data.game_stadium.iloc[index] == 'Allegiant Stadium'):
+  elif (game_stadium == 'Allegiant Stadium'):
     altitude.append(ALLEGIANTSTADIUM)
-  elif (data.game_stadium.iloc[index] == 'Lumen Field'):
+  elif (game_stadium == 'Lumen Field'):
     altitude.append(LUMENFIELD)
   else:
     altitude.append('')
 
-
 print("Processing weather data")
-for index,rows in tqdm(data.iterrows(), desc='Humidity Progress', total=(data.shape[0], ascii = True)):
-  humidity.append(getHumidity(data.weather.iloc[index])
-for index,rows in tqdm(data.iterrows(), desc='Temperature Progress', total=(data.shape[0], ascii = True)):
-  humidity.append(getTemperature(data.weather.iloc[index])
+print("Processing humidity data")
+for index,rows in tqdm(newData.iterrows(), desc='Humidity Progress', total=newData.shape[0], ascii = True):
+  humidity.append(getHumidity(newData.weather.iloc[index]))
+  
+print("Processing temperature data")
+for index,rows in tqdm(newData.iterrows(), desc='Temperature Progress', total=newData.shape[0], ascii = True):
+  temperature.append(getTemperature(newData.weather.iloc[index]))
 
+print("Appending altitude data")
+data['altitude'] = altitude
+
+print("Appending humidity data")
+data['humidity'] = humidity
+
+print("Appending temperature data")
+data['temperature'] = temperature
+
+print("Writing file out to .")
+data.to_csv(path_or_buf = './nflfastr_2010_2020_kicks_passes.csv')
