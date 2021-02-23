@@ -74,7 +74,7 @@ kick_accuracy = []
 altitude = []
 humidity = []
 temperature = []
-
+"""
 # Process the altitude
 # To get altitudes, see the stadium reference document
 print("Processing altitude data")
@@ -200,6 +200,7 @@ for index,rows in tqdm(data.iterrows(), desc='Altitude Progress', total=(data.sh
     altitude.append(LUMENFIELD)
   else:
     altitude.append('')
+"""
 
 # Process weather data
 print("Processing weather data")
@@ -209,22 +210,24 @@ for index,rows in tqdm(data.iterrows(), desc='Humidity Progress', total=data.sha
 print("Processing temperature data")
 for index,rows in tqdm(data.iterrows(), desc='Temperature Progress', total=data.shape[0], ascii = True):
   temperature.append(getTemperature(data.weather.iloc[index]))
-  
+
+"""  
 # Process kick accuracy data
 print("Processing kick accuracy data")
 for index, rows in tqdm(data.iterrows(), desc='Kick Accuracy Progress', total=data.shape[0], ascii = True):
   accuracy = 
   kick_accuracy.append()
-  
+"""
+
 # Append data
-print("Appending altitude data")
-data['altitude'] = altitude
+#print("Appending altitude data")
+#data['altitude'] = altitude
 print("Appending humidity data")
 data['humidity'] = humidity
 print("Appending temperature data")
 data['temperature'] = temperature
-print("Appending kick accuracy data")
-data['kick_accuracy'] = kick_accuracy
+#print("Appending kick accuracy data")
+#data['kick_accuracy'] = kick_accuracy
 
 # Drop irrelevant observations
 print("Removing irrelevant observations")
@@ -234,7 +237,75 @@ for index,rows in tqdm(data.iterrows(), desc='Row Processing', total = data.shap
   play_type = data.play_type.iloc[index]
   if (play_type == 'pass'):
     continue
-  elif (play_type == 'field_goal'):
+  else:
+    removalList.append(index)
+print('Removing', len(removalList), 'out of', originalLen,'rows')
+data.drop(data.index[removalList], axis = 0, inplace = True)
+print('Done.')
+
+
+
+# Write data out
+print("Writing file out to .")
+data.to_csv(path_or_buf = './nflfastr_2010_2020_passes.csv')
+
+# PROCESS KICKING DATA
+print("Importing CSV data")
+
+### Choose the location of your dataset here - use a full (not relative) filepath for best results:
+csvdata = "/home/kim3/nfl_analysis_data/nflfastr_pbp_2010_to_2020.csv"
+
+print("Reading CSV data")
+data = pd.read_csv(csvdata)
+
+# Prepare to clean all but needed columns
+dataColumnsToDrop = data.columns.values.tolist()
+dataColumnsToDrop.remove('game_id')
+dataColumnsToDrop.remove('game_stadium')
+dataColumnsToDrop.remove('weather')
+dataColumnsToDrop.remove('play_type')
+dataColumnsToDrop.remove('kick_distance')
+dataColumnsToDrop.remove('air_yards')
+dataColumnsToDrop.remove('cp')
+dataColumnsToDrop.remove('cpoe')
+
+# Drop all other columns
+print("Removing unneeded columns")
+data.drop(columns = dataColumnsToDrop, inplace = True)
+
+# Create lists that will hold new data
+print("Creating lists for new data")
+kick_accuracy = []
+altitude = []
+humidity = []
+temperature = []
+
+# Process weather data
+print("Processing weather data")
+print("Processing humidity data")
+for index,rows in tqdm(data.iterrows(), desc='Humidity Progress', total=data.shape[0], ascii = True):
+  humidity.append(getHumidity(data.weather.iloc[index]))
+print("Processing temperature data")
+for index,rows in tqdm(data.iterrows(), desc='Temperature Progress', total=data.shape[0], ascii = True):
+  temperature.append(getTemperature(data.weather.iloc[index]))
+
+# Append data
+#print("Appending altitude data")
+#data['altitude'] = altitude
+print("Appending humidity data")
+data['humidity'] = humidity
+print("Appending temperature data")
+data['temperature'] = temperature
+#print("Appending kick accuracy data")
+#data['kick_accuracy'] = kick_accuracy
+
+# Drop irrelevant observations
+print("Removing irrelevant observations")
+removalList = []
+originalLen = data.shape[0]
+for index,rows in tqdm(data.iterrows(), desc='Row Processing', total = data.shape[0], ascii = True):
+  play_type = data.play_type.iloc[index]
+  if (play_type == 'field_goal'):
     continue
   elif (play_type == 'punt'):
     continue
@@ -248,8 +319,6 @@ print('Removing', len(removalList), 'out of', originalLen,'rows')
 data.drop(data.index[removalList], axis = 0, inplace = True)
 print('Done.')
 
-
-
 # Write data out
 print("Writing file out to .")
-data.to_csv(path_or_buf = './nflfastr_2010_2020_kicks_passes.csv')
+data.to_csv(path_or_buf = './nflfastr_2010_2020_kicks.csv')
