@@ -74,7 +74,7 @@ kick_accuracy = []
 altitude = []
 humidity = []
 temperature = []
-"""
+
 # Process the altitude
 # To get altitudes, see the stadium reference document
 print("Processing altitude data")
@@ -200,7 +200,6 @@ for index,rows in tqdm(data.iterrows(), desc='Altitude Progress', total=(data.sh
     altitude.append(LUMENFIELD)
   else:
     altitude.append('')
-"""
 
 # Process weather data
 print("Processing weather data")
