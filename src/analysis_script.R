@@ -70,6 +70,14 @@ par(mar=c(8, 4.1, 4.1, 2.1))
 boxplot(data$air_yards~data$game_stadium, las = 3, main = "Intended Passing Yardage by Game Stadium", xlab = "Stadium", ylab = "Intended Passing Yardage")
   # most passes are not long (see favstats), but of course, there are hail marys and longer passes
   # most passes are under 10 yards
+stadium_subset <- data %>%
+  mutate(game_stadium = ifelse(
+    stringr::str_detect(game_stadium, "Mile High"),"Mile High", game_stadium
+  )) %>%
+  filter(game_stadium == "Mile High" | game_stadium == "Lincoln Financial Field" | game_stadium == "Lambeau Field" | game_stadium == "Ralph Wilson Stadium" | game_stadium == "Raymond James Stadium")
+par(mar=c(7.5,4.1,4.1,2.1))
+boxplot(stadium_subset$kick_distance~stadium_subset$game_stadium, las = 2, main = "Actual Kicking Distance by Game Stadium", xlab = "", ylab = "Kick Distance", cex.axis = .65)  
+  
 boxplot(data$kick_distance~data$game_stadium, las = 2, main = "Actual Kicking Distance by Game Stadium", xlab = "Stadium", ylab = "Kick Distance")
   # little difference between bars is what we want to see, good!
 boxplot(data$kick_distance~data$away_team, las = 2)
@@ -185,3 +193,8 @@ summary(cpStadiumModel)
 
 t(rank(passData$cp) ~ passData$game_stadiumpassData$temp)
 
+#######################################
+
+subset <- data[sample(nrow(data),5315),]
+plot(air_yards~temp, data = subset, main = "Air Yards by Temperature")
+plot(cp~temp, data = subset)
